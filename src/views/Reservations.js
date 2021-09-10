@@ -17,14 +17,11 @@ import {
     CLabel,
     CInput,
     CSelect
-    // CTextarea
-
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-
 import useApi from '../services/api';
 
-export default () => {
+export default function Wall() {
     const api = useApi();
 
     const [loading, setLoading] = useState(true);
@@ -81,16 +78,19 @@ export default () => {
         setShowModal(false);
     }
 
-    const handleEditButton = (index) => {
+    const handleEditButton = (id) => {
+        let index =list.findIndex(valor=>valor.id===id);
+
         setModalId(list[index]['id']);
-        setModalTitleField(list[index]['title']);
-        // setModalBodyField(list[index]['body']);
+        setModalUnitId(list[index]['id_unit']);
+        setModalAreaId(list[index]['id_area']);
+        setModalDateField(list[index]['reservation_date']);
         setShowModal(true);
     }
 
     const handleRemoveButton = async (index) => {
         if (window.confirm('Tem certeza que deseja excluir?')) {
-            const result = await api.removeDocument(list[index]['id']);
+            const result = await api.removeReservation(list[index]['id']);
             if (result.error === '') {
                 getList();
             } else {
@@ -101,32 +101,25 @@ export default () => {
 
     const handleNewButon = () => {
         setModalId('');
-        setModalTitleField('');
-        //setModalBodyField('');
-        setShowModal(true);
+        setModalUnitId(modalUnitList[0]['id']);
+        setModalAreaId(modalAreaList[0]['id']);
+        setModalDateField('');
+        setShowModal(true)
     }
 
     const handleModalSave = async () => {
-        if (modalTitleField) {
+        if (modalUnitId && modalAreaId && modalDateField) {
             setModalLoading(true);
             let result;
             let data = {
-                title: modalTitleField
+                id_unit: modalUnitId,
+                id_area: modalAreaId,
+                reservation_date: modalDateField
             };
-            if (modalId === '') {
-                if (modalFileField) {
-                    data.file = modalFileField;
-                    result = await api.addDocument(data);
-                } else {
-                    alert("Selecione o arquivo!")
-                    setModalLoading(false);
-                    return;
-                }
+            if(modalId === '') {
+                result = await api.addReservation(data);
             } else {
-                if (modalFileField) {
-                    data.file = modalFileField;
-                }
-                result = await api.updateDocument(modalId, data);
+                result = await api.updateReservation(modalId, data);
             }
             setModalLoading(false);
             if (result.error === '') {
@@ -144,130 +137,128 @@ export default () => {
         window.open(list[index]['fileurl']);
     }
     return (
-        <>
-            <CRow>
-                <CCol>
-                    <h2>Reservas</h2>
-
-                    <CCard>
-                        <CCardHeader>
-                            <CButton
-                                color="primary"
-                                onClick={handleNewButon}
-                                disabled={modalUnitList.length===0||modalAreaList.length=== 0}
-                            >
-                                <CIcon name="cil-check" /> Novo Reserva
-                            </CButton>
-                        </CCardHeader>
-                        <CCardBody>
-                            <CDataTable
-                                items={list}
-                                fields={fields}
-                                loading={loading}
-                                noItemsViewSlot=" "
-                                columnFilter
-                                sorter
-                                hover
-                                striped
-                                bordered
-                                pagination
-                                itemsPerPage={5}
-                                scopedSlots={{
-                                    'reservation_date': (item) => (
-                                        <td>
-                                            {item.reservation_date_formatted}
-                                        </td>
-                                    ),
-                                    'actions': (item, index) => (
-                                        <td>
-                                            <CButtonGroup>
-                                                <CButton
-                                                    color="info"
-                                                    onClick={()=>handleEditButton(index)}
-                                                    disabled={modalUnitList.length===0||modalAreaList.length===0}
-                                                >
-                                                    Editar</CButton>
-                                                <CButton color="danger" onClick={() => handleRemoveButton(index)}>Excluir</CButton>
-                                            </CButtonGroup>
-                                        </td>
-                                    )
-                                }}
-                            />
-                        </CCardBody>
-                    </CCard>
-                </CCol>
-            </CRow>
-
-            <CModal show={showModal} onClose={handleCloseModal}>
-                <CModalHeader closeButton>{modalId === '' ? 'Novo' : 'Editar'} Reserva</CModalHeader>
-                <CModalBody>
-
-                    <CFormGroup>
-                        <CLabel htmlFor="modal-unit">Unidade</CLabel>
-                        <CSelect
-                            id="modal-unit"
-                            custom
-                            onChange={e=>setModalUnitId(e.target.value)}
-                        >
-                            {modalUnitList.map((item, index) => {
-                                <option
-                                    key={index}
-                                    value={item.id}
-                                >{item.name}
-                                </option>
-                            })}
-                        </CSelect>
-                    </CFormGroup>
-
-                    <CFormGroup>
-                        <CLabel htmlFor="modal-area">Área</CLabel>
-                        <CSelect
-                            id="modal-area"
-                            custom
-                            onChange={e=>setModalAreaId(e.target.value)}
-                        >
-                            {modalAreaList.map((item, index) => {
-                                <option
-                                    key={index}
-                                    value={item.id}
-                                >{item.title}
-                                </option>
-                            })}
-                        </CSelect>
-                    </CFormGroup>
-
-
-                    <CFormGroup>
-                        <CLabel htmlFor="modal-date">Data da Reserva</CLabel>
-                        <CInput
-                            type="text"
-                            id="modal-date"
-                            value={modalDateField}
-                            onChange={e=>setModalDateField(e.target.value)}
-                            disabled={modalLoading}
-                        />
-                    </CFormGroup>
-
-
-                </CModalBody>
-                <CModalFooter>
+     <>
+        <CRow>
+          <CCol>
+           <h2>Reservas</h2>
+            <CCard>
+                <CCardHeader>
                     <CButton
                         color="primary"
-                        onClick={handleModalSave}
-                        disabled={modalLoading}
+                        onClick={handleNewButon}
+                        disabled={modalUnitList.length === 0 || modalAreaList.length === 0}
                     >
-                        {modalLoading ? 'Carregando...' : 'Salvar'}
+                        <CIcon name="cil-check" /> Novo Reserva
                     </CButton>
+                </CCardHeader>
+                <CCardBody>
+                    <CDataTable
+                        items={list}
+                        fields={fields}
+                        loading={loading}
+                        noItemsViewSlot=" "
+                        columnFilter
+                        sorter
+                        hover
+                        striped
+                        bordered
+                        pagination
+                        itemsPerPage={10}
+                        scopedSlots={{
+                            'reservation_date': (item) => (
+                                <td>
+                                    {item.reservation_date_formatted}
+                                </td>
+                            ),
+                            'actions': (item, index) => (
+                                <td>
+                                    <CButtonGroup>
+                                        <CButton
+                                            color="info"
+                                            onClick={()=>handleEditButton(item.id)}
+                                            disabled={modalUnitList.length===0||modalAreaList.length===0}
+                                        >
+                                            Editar</CButton>
+                                        <CButton color="danger" onClick={() => handleRemoveButton(index)}>Excluir</CButton>
+                                    </CButtonGroup>
+                                </td>
+                            )
+                        }}
+                    />
+                </CCardBody>
+            </CCard>
+          </CCol>
+        </CRow>
 
-                    <CButton
-                        color="secondary"
-                        onClick={handleCloseModal}
-                        disabled={modalLoading}
+        <CModal show={showModal} onClose={handleCloseModal}>
+            <CModalHeader closeButton>{modalId===''?'Novo':'Editar'} Reserva</CModalHeader>
+            <CModalBody>
+                <CFormGroup>
+                    <CLabel htmlFor="modal-unit">Unidade</CLabel>
+                    <CSelect
+                        id="modal-unit"
+                        custom
+                        onChange={e=>setModalUnitId(e.target.value)}
+                        value={modalUnitId}
                     >
-                        Cancelar
-                    </CButton>
-                </CModalFooter>
-            </CModal>
-        </>
+                        {modalUnitList.map((item, index) => {
+                            <option
+                              key={index}
+                              value={item.id}
+                            >{item.name}
+                            </option>
+                        })}
+                    </CSelect>
+                </CFormGroup>
+
+                <CFormGroup>
+                    <CLabel htmlFor="modal-area">Área</CLabel>
+                    <CSelect
+                        id="modal-area"
+                        custom
+                        onChange={e=>setModalAreaId(e.target.value)}
+                        value={modalAreaId}
+                    >
+                        {modalAreaList.map((item, index) => {
+                            <option
+                             key={index}
+                             value={item.id}
+                            >{item.title}
+                            </option>
+                        })}
+                    </CSelect>
+                </CFormGroup>
+
+                <CFormGroup>
+                    <CLabel htmlFor="modal-date">Data da Reserva</CLabel>
+                    <CInput
+                        type="text"
+                        id="modal-date"
+                        value={modalDateField}
+                        onChange={e=>setModalDateField(e.target.value)}
+                        disabled={modalLoading}
+                    />
+                </CFormGroup>
+
+            </CModalBody>
+            <CModalFooter>
+                <CButton
+                    color="primary"
+                    onClick={handleModalSave}
+                    disabled={modalLoading}
+                >
+                    {modalLoading ? 'Carregando...' : 'Salvar'}
+                </CButton>
+
+                <CButton
+                    color="secondary"
+                    onClick={handleCloseModal}
+                    disabled={modalLoading}
+                >
+                    Cancelar
+                </CButton>
+            </CModalFooter>
+        </CModal>
+     </>
     );
 }

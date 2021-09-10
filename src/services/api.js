@@ -19,12 +19,12 @@ const request = async (method, endpoint, params, token = null) => {
     if(token) {
         headers.Authorization = `Bearer ${token}`;
     }
-    let req = await fetch(fullUrl, {method, headers, body,});
+    let req = await fetch(fullUrl, {method, headers, body});
     let json = await req.json();
     return json;
 }
 
-export default () => {
+export default function services()  {
     return {
         getToken: () => {
             return localStorage.getItem('token');
@@ -38,7 +38,7 @@ export default () => {
             let json = await request('post', '/auth/login', {email, password});
             return json;
         },
-        logout: async() => {
+        logout: async(email, password) => {
             let token = localStorage.getItem('token');
             let json = await request('post', '/auth/logout', {}, token);
             localStorage.removeItem('token');
@@ -50,7 +50,7 @@ export default () => {
             return json;
         },
         updateWall: async (id, data) => {
-            let token = localStorage.getItem('token');;
+            let token = localStorage.getItem('token');
             let json = await request('put', `/wall/${id}`, data, token);
             return json;
         },
@@ -83,7 +83,7 @@ export default () => {
                 }, 
                 body: formData
             });
-            let json= await req.json();
+            let json = await req.json();
             return json;
         },
         updateDocument: async (id, data) => {
@@ -100,7 +100,7 @@ export default () => {
                 }, 
                 body: formData
             });
-            let json= await req.json();
+            let json = await req.json();
             return json;
         },
         removeDocument: async (id) => {
@@ -110,7 +110,7 @@ export default () => {
         },
         getReservations: async () => {
             let token = localStorage.getItem('token');
-            let json = await request('get', '/reservations', {}, token );
+            let json = await request('get', '/reservations', {}, token);
             return json;
         },
         getUnits: async () => {
@@ -122,7 +122,43 @@ export default () => {
             let token = localStorage.getItem('token');
             let json = await request('get', '/areas', {}, token);
             return json;
-        }
+        },
+        addReservation: async (data) => {
+            let token = localStorage.getItem('token');
+            let json = await request('post', '/reservations', data, token);
+            return json;
+        },
+        updateReservations: async (id, data) => {
+            let token = localStorage.getItem('token');
+            let json = await request('put', `/reservation/${id}`, data, token);
+            return json;
+            
+        },
+        removeReservation: async (id) => {
+            let token = localStorage.getItem('token');
+            let json = await request('delete', `/reservation/${id}`, {}, token);
+            return json;
+        },
+        getWarnings: async ()=> {
+            let token = localStorage.getItem('token');
+            let json = await request('get', '/warnings', {}, token);
+            return json;
+        },
+        updateWarning: async (id) => {
+            let token = localStorage.getItem('token');
+            let json = await request('put', `/warning${id}`, {}, token);
+            return json;
+        },
+        getFoundAndLost: async () => {
+            let token = localStorage.getItem("token");
+            let json = await request("get", "/foundandlost", {}, token);
+            return json;
+        },
+        updateFoundAndLost: async (id) => {
+            let token = localStorage.getItem("token");
+            let json = await request("put", `/foundandlost/${id}`, {}, token);
+            return json;
+        },
 
     };
 }
